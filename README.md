@@ -1,2 +1,21 @@
-# Mixture-of-Experts-for-multiclass-classification-in-Particle-Physics
-This project implements a dynamic, two-stage classification pipeline for High Energy Physics (LHC) events.
+# Mixture of Experts for Multiclass Classification in Particle Physics
+
+A dynamic two-stage Mixture-of-Experts (MoE) inference pipeline for High-Energy Physics (LHC) event classification.
+
+---
+
+## Pipeline Overview
+
+
+
+
+```mermaid
+flowchart TD
+    A[Raw Data] --> B[Stage I: FROCC Sorter]
+    B --> C[Event Filtering & Routing]
+    C --> D[Stage II: Expert Pool]
+    D --> E[Aggregator]
+    E --> F[Final Class Probabilities]
+```
+
+
