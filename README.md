@@ -45,6 +45,18 @@ Trains a single expert on a specific signal vs. background in strict isolation. 
 ## 🚀 How to Run the Pipeline
 
 Follow these steps in order to train and evaluate the complete system from scratch.
+clone the repo first.
+
+### Install the requirements.txt
+use terminal
+```bash
+pip install -r requirements.txt
+```
+### Split the dataset
+keep in mind to change the relative file path if name's diff.
+```bash
+python src\datasplit.py  
+```
 
 ### Step 1: Train the Sorter (Stage I)
 Train the anomaly detector to filter the QCD background.
@@ -55,10 +67,15 @@ python train_and_tune_sorter.py
 ### Step 2: Train experts (Stage II)
 Train Expert 1 
 ```bash
-python train_expert.py --signal_name "Tau_signal" --bg_csv "data/raw/background_train.csv" --sig_csv "data/raw/signalA_train.csv"
+python src/train_expert.py --signal_name "ttlep" --bg_csv "data/new raw/train_bg_QCD.csv" --sig_csv "data/new raw/train_TTBarLep_120.csv"
 ```
 
  Train Expert 2 
 ```bash 
-python train_expert.py --signal_name "Signal_B" --bg_csv "data/raw/background_train.csv" --sig_csv "data/raw/signalB_train.csv"
+python src/train_expert.py --signal_name "wtoqq" --bg_csv "data/new raw/train_bg_QCD.csv" --sig_csv "data/new raw/train_WtoQQ_120.csv"
+```
+### Step 3: See result
+eval the final pipeline
+```bash
+python src/evaluate_pipeline.py
 ```
