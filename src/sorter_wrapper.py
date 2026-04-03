@@ -13,7 +13,7 @@ from src.base import BaseSorter
 class FROCCWrapper(BaseSorter):
     def __init__(self, model_path: str = "models/frocc_weights/sorter.pkl"):
         """
-        Loads the pre-trained StandardScaler + DFROCC pipeline.
+        Loads the pre-trained RobustScaler + DFROCC pipeline.
         """
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"❌ Sorter model not found at {model_path}. Run training script first.")
