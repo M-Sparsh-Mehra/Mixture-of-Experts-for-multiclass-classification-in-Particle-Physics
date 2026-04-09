@@ -12,26 +12,43 @@ import torch
 import torch.nn as nn
 from .base import BaseExpert
 
+# Pull our network hyperparameters directly from the Single Source of Truth
+from config import EXPERT_CONFIG
+
 class MLPExpert(BaseExpert, nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int = 64, signal_name: str = "Unknown"):
+    def __init__(self, input_dim: int, signal_name: str = "Unknown"):
         """
-        Initializes the PyTorch Neural Network for a specific signal.
+        Initializes the PyTorch Neural Network dynamically based on config.py.
         """
         # Initialize both parent classes (The Contract + PyTorch Module)
         BaseExpert.__init__(self, signal_name=signal_name)
         nn.Module.__init__(self)
         
-        # Define the Neural Network Architecture
-        # This is a standard feed-forward network optimized for tabular kinematics
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.LeakyReLU(0.1),       # LeakyReLU often works well for continuous physics features
-            nn.Dropout(0.2),         # Prevents overfitting on rare signal data
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.LeakyReLU(0.1),
-            nn.Dropout(0.2),
-            nn.Linear(hidden_dim, 1) # Crucial: Output is a single raw logit. NO Sigmoid here.
-        )
+        # Load hyperparameters from config
+        hidden_dims = EXPERT_CONFIG["hidden_layers"]
+        dropout_rate = EXPERT_CONFIG["dropout_rate"]
+        alpha = EXPERT_CONFIG["leaky_relu_alpha"]
+
+        # Dynamically build the network layers
+        layers = []
+        
+        # 1. Input Normalization (CRITICAL for 1360D zero-padded data)
+        # This replaces StandardScaler and learns the best scaling per-batch
+        layers.append(nn.BatchNorm1d(input_dim))
+        
+        # 2. Build the hidden layers dynamically
+        current_dim = input_dim
+        for h_dim in hidden_dims:
+            layers.append(nn.Linear(current_dim, h_dim))
+            layers.append(nn.LeakyReLU(alpha))
+            layers.append(nn.Dropout(dropout_rate))
+            current_dim = h_dim  # Update the input dimension for the next layer
+            
+        # 3. Final Output Node
+        layers.append(nn.Linear(current_dim, 1)) # Crucial: NO Sigmoid here.
+
+        # Unpack the list into a PyTorch Sequential container
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

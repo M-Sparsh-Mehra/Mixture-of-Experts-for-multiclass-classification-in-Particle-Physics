@@ -3,18 +3,23 @@ This is the bridge that takes your Scikit-Learn .pkl model
 and makes it speak natively to the PyTorch tensors that the Experts will be using.
 '''
 
-
 import torch
 import joblib
 import numpy as np
 import os
 from src.base import BaseSorter
 
+# Pulling from our centralized config to ensure paths never break if we move folders
+from config import FROCC_WEIGHTS_DIR
+
 class FROCCWrapper(BaseSorter):
-    def __init__(self, model_path: str = "models/frocc_weights/sorter.pkl"):
+    def __init__(self, model_path: str = None):
         """
         Loads the pre-trained RobustScaler + DFROCC pipeline.
         """
+        if model_path is None:
+            model_path = os.path.join(FROCC_WEIGHTS_DIR, "sorter.pkl")
+
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"❌ Sorter model not found at {model_path}. Run training script first.")
         
@@ -38,7 +43,7 @@ class FROCCWrapper(BaseSorter):
         x_np = x.detach().cpu().numpy()
         
         # 2. Get anomaly scores from the pipeline
-        # The pipeline automatically applies the StandardScaler before feeding to DFROCC
+        # The pipeline automatically applies the RobustScaler (protecting our zero-padding!) before feeding to DFROCC
         scores = self.model.decision_function(x_np)
         
         # 3. Apply the threshold logic
