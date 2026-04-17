@@ -16,10 +16,13 @@ RESULTS_DIR = r"D:\SPARSH\particle\MOE\Mixture-of-Experts-for-multiclass-classif
 DATA_PATHS = {
     "background_qcd_train": os.path.join(BASE_DATA_DIR, "train_bg_QCD.csv"),
     "background_qcd_val": os.path.join(BASE_DATA_DIR, "val_bg_QCD.csv"),
+    "background_qcd_test": os.path.join(BASE_DATA_DIR, "test_bg_QCD.csv"),
     "expert_1_train": os.path.join(BASE_DATA_DIR, "train_TTBarLep_120.csv"),
     "expert_1_val": os.path.join(BASE_DATA_DIR, "val_TTBarLep_120.csv"),
-    "expert_2_train": os.path.join(BASE_DATA_DIR, "train_WtoQQ_120.csv"),
-    "expert_2_val": os.path.join(BASE_DATA_DIR, "val_WToQQ_120.csv"),
+    "expert_1_test": os.path.join(BASE_DATA_DIR, "test_TTBarLep_120.csv"), # Used for the inference.py sample
+    "expert_2_train": os.path.join(BASE_DATA_DIR, "train_HToGG.csv"),
+    "expert_2_val": os.path.join(BASE_DATA_DIR, "val_HToGG.csv"),
+    "expert_2_test": os.path.join(BASE_DATA_DIR, "test_HToGG.csv"), # Used for the inference.py sample
     "val_signal": os.path.join(BASE_DATA_DIR, "val_signal.csv")
 }
 
@@ -54,11 +57,11 @@ for feature in BASE_FEATURES:
 #  STAGE I: DFROCC HYPERPARAMETERS
 # ==========================================
 SORTER_CONFIG = {
-    "target_recall": 0.995,
-    "num_clf_dim": 50,
-    "epsilon": 0.05,
+    "target_recall": 0.8,
+    "num_clf_dim": 10000,     ####i increased this to 500 to give the model more capacity to capture the complex background manifold, which should help us achieve the target recall of 0.7 without being too aggressive on the threshold.
+    "epsilon": 0.001,      ## tightened epsilon
     "bin_factor": 2,
-    "threshold_default": 1.0 
+    "threshold_default": 1.0  
 }
 
 # ==========================================
@@ -83,12 +86,12 @@ EXPERTS = [
         "id": "ttlep",
         "model_path": os.path.join(EXPERT_WEIGHTS_DIR, "expert_ttlep.pt"),
         "val_data": os.path.join(BASE_DATA_DIR, "val_TTBarLep_120.csv"),
-        "test_data": os.path.join(BASE_DATA_DIR, "val_TTBarLep_120.csv") # Used for the inference.py sample
+        "test_data": os.path.join(BASE_DATA_DIR, "test_TTBarLep_120.csv") # Used for the inference.py sample
     },
     {
         "id": "htogg",
         "model_path": os.path.join(EXPERT_WEIGHTS_DIR, "expert_htogg.pt"),
         "val_data": os.path.join(BASE_DATA_DIR, "val_HToGG.csv"),
-        "test_data": os.path.join(BASE_DATA_DIR, "val_HToGG.csv")
+        "test_data": os.path.join(BASE_DATA_DIR, "test_HToGG.csv")
     }
 ]

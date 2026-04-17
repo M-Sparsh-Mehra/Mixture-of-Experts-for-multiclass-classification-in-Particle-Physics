@@ -102,7 +102,9 @@ def main():
     
     scores_bg = clf.decision_function(X_val_bg)
     scores_sig = clf.decision_function(X_val_signal)
-    
+
+
+    ###############################################33
     y_true = np.concatenate([np.zeros(len(scores_bg)), np.ones(len(scores_sig))])
     y_scores = np.concatenate([scores_bg, scores_sig])
     
@@ -110,15 +112,32 @@ def main():
     best_recall = 0.0
     best_fpr = 1.0 
     
-    thresholds_to_test = np.linspace(0.0, 1.0, 200)
+    # --- THE FIX: DYNAMIC SEARCH GRID ---
+    # Find the actual min and max anomaly scores produced by the 1360D model
+    min_score = np.min(y_scores)
+    max_score = np.max(y_scores)
     
+    print(f"    -> Dynamic Score Range Detected: [{min_score:.4f} to {max_score:.4f}]")
+    
+    # Scan 1,000 steps between the actual minimum and maximum scores
+    thresholds_to_test = np.linspace(min_score, max_score, 1000)
+    
+
+    ##########################
+    # Prevent the scanner from ever testing exactly 1.0 (which breaks the logic)
+    # Use 5000 steps to handle the microscopic differences in 1360D space
+    thresholds_to_test = np.linspace(min_score, max_score - 1e-6, 5000)
+    
+    best_threshold = max_score - 1e-6 # Safe fallback
+
+
     for t in thresholds_to_test:
         # If agreement score < t, it is classified as Signal (1)
         preds = (y_scores <= t).astype(int)
         current_recall = recall_score(y_true, preds)
         
         if current_recall >= LOCAL_CONFIG["target_recall"]:
-            bg_kept = (scores_bg < t).sum()
+            bg_kept = (scores_bg <= t).sum()
             current_fpr = bg_kept / len(scores_bg)
             
             best_threshold = t
@@ -130,7 +149,7 @@ def main():
     bg_removed_fraction = 1.0 - best_fpr
     
     print(f" -> Calibration complete.")
-    print(f"    Selected Threshold: {best_threshold:.4f}")
+    print(f"    Selected Threshold: {best_threshold:.5f}")
     print(f"    Actual Signal Recall: {best_recall:.4f}")
     print(f"    Background Pass Rate: {best_fpr:.2%}") 
     print(f"    Background REMOVED:   {bg_removed_fraction:.2%}") 
